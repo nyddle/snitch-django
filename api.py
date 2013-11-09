@@ -2,8 +2,13 @@
 from flask import Flask, jsonify, request
 from itsdangerous import Signer
 from pymongo import MongoClient
-from pymongo.database import DBRef
+from pymongo.database import DBRef, Database
 from bson.objectid import ObjectId
+import hashlib
+import time
+# todo: check security
+# todo: docs
+# todo: use md5
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
@@ -14,18 +19,50 @@ db = client.sqlr
 
 @app.route('/api/get', methods=['POST', 'GET'])
 def get():
-    pass
+    if request.json is None or not 'token' in request.json or not 'app' in request.json:
+        return jsonify({'result': False, 'reason': 'wrong request'})
+
+    with client.start_request():
+        if not db.users.find_one({'token': request.json['token']}):
+            return jsonify({'result': False, 'reason': 'User not found'})
+
+        prj = db.prjs.find_one({'title': request.json['app']})
+        if prj:
+            if 'type' in request.json:
+                events = db.events.find({'prj.$id': ObjectId(prj['_id']), 'type': request.json['type']})
+            else:
+                events = db.events.find({'prj.$id': ObjectId(prj['_id'])})
+            events_list = []
+            for event in events:
+                event.pop('_id')
+                event['prj'] = db.dereference(event['prj'])['title']
+                events_list.append(event)
+            return jsonify({'result': True, 'events': events_list})
+        else:
+            return jsonify({'result': False, 'reason': 'Not found'})
 
 
 @app.route('/api/post', methods=['POST'])
 def post():
+    # todo: optimize
+    if request.json is None or not 'token' in request.json or not 'type' in request.json or not 'message' in request.json or not 'app' in request.json:
+        return jsonify({'result': False, 'reason': 'wrong request'})
     # todo: validation
+    # todo: check token
     with client.start_request():
-        prj = db.prjs.find_one({'token': request.json['app']})
-        if prj and '_id' in prj:
-            # todo: filter by user?
-            db.events.find({'project.$id': ObjectId(prj['_id'])})
-    return jsonify({'result': True})
+        #user = db.users.find_one({'token': request.json['token']})
+        if db.users.find_one({'token': request.json['token']}):
+
+            prj = db.prjs.find_one({'title': request.json['app']})
+            if prj and '_id' in prj:
+                # todo: filter by user?
+                #db.events.find({'project.$id': ObjectId(prj['_id'])})
+                db.events.insert({'time': int(time.time()), 'prj': DBRef(collection='prjs', id=prj['_id']),
+                                  'type': request.json['type'], 'message': request.json['message']})
+
+                return jsonify({'result': True})
+            return jsonify({'result': False, 'reason': 'Project not found'})
+        return jsonify({'result': False, 'reason': 'User not found'})
 
 
 @app.route('/api/reg', methods=['POST'])
@@ -33,7 +70,7 @@ def create_user():
     # todo: move to decorator
     # todo: validate email
     # todo: send a letter
-    if request.json is None or not 'email' in request.json or not 'password':
+    if request.json is None or not 'email' in request.json or not 'password' in request.json:
         return jsonify({'result': False, 'reason': 'wrong request'})
     with client.start_request():
         if db.users.find({'email': request.json['email']}).count() > 0:
@@ -65,7 +102,7 @@ def create_proj():
 def auth():
     if request.json is None or not 'email' in request.json or not 'password' in request.json:
         return jsonify({'result': False, 'reason': 'wrong request'})
-
+    # hashlib.md5('Smth').hexdigest()
     with client.start_request():
         user = db.users.find_one({'email': request.json['email']})
         if not user:
