@@ -22,3 +22,8 @@ types: {
 	notification: 1, 
 	error: 2
 }
+
+
+Collections:
+users
+events

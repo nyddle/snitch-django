@@ -1,23 +1,19 @@
 # -*- coding: utf-8 -*-
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template, redirect, url_for, flash, session, Blueprint
 from itsdangerous import Signer
 from pymongo import MongoClient
-from pymongo.database import DBRef, Database
+from pymongo.database import DBRef
 from bson.objectid import ObjectId
 import hashlib
 import time
-# todo: check security
-# todo: docs
-# todo: use md5
-from werkzeug.security import generate_password_hash, check_password_hash
+from db import SqlrMongoManager
 
-app = Flask(__name__)
+api = Blueprint('api', __name__)
 
-client = MongoClient('localhost', 27017)
-db = client.sqlr
+db_manager = SqlrMongoManager()
 
 
-@app.route('/api/get', methods=['POST', 'GET'])
+@api.route('/get', methods=['POST'])
 def get():
     if request.json is None or not 'token' in request.json or not 'app' in request.json:
         return jsonify({'result': False, 'reason': 'wrong request'})
@@ -42,7 +38,7 @@ def get():
             return jsonify({'result': False, 'reason': 'Not found'})
 
 
-@app.route('/api/post', methods=['POST'])
+@api.route('/post', methods=['POST'])
 def post():
     # todo: optimize
     if request.json is None or not 'token' in request.json or not 'type' in request.json or not 'message' in request.json or not 'app' in request.json:
@@ -65,7 +61,7 @@ def post():
         return jsonify({'result': False, 'reason': 'User not found'})
 
 
-@app.route('/api/reg', methods=['POST'])
+@api.route('/reg', methods=['POST'])
 def create_user():
     # todo: move to decorator
     # todo: validate email
@@ -79,11 +75,11 @@ def create_user():
         s = Signer('ololo')
         token = s.sign(request.json['email'])
         db.users.insert({'token': token, 'email': request.json['email'],
-                         'password': generate_password_hash(request.json['password'])})
+                         'password': hashlib.md5(request.json['password']).hexdigest()})
     return jsonify({'result': True, 'token': token})
 
 
-@app.route('/api/prj', methods=['POST'])
+@api.route('/prj', methods=['POST'])
 def create_proj():
     if request.json is None or not 'title' in request.json or not 'token' in request.json:
         return jsonify({'result': False, 'reason': 'wrong request'})
@@ -98,20 +94,15 @@ def create_proj():
     return jsonify({'result': True})
 
 
-@app.route('/api/auth', methods=['POST'])
+@api.route('/auth', methods=['POST'])
 def auth():
     if request.json is None or not 'email' in request.json or not 'password' in request.json:
         return jsonify({'result': False, 'reason': 'wrong request'})
-    # hashlib.md5('Smth').hexdigest()
+
     with client.start_request():
-        user = db.users.find_one({'email': request.json['email']})
+
+        user = db.users.find_one({'email': request.json['email'], 'password': request.json['password']})
         if not user:
             return jsonify({'result': False, 'reason': 'Email not found'})
 
-        if not check_password_hash(user['password'], request.json['password']):
-            return jsonify({'result': False, 'reason': 'Wrong password'})
-
     return jsonify({'token': user['token'], 'result': True})
-
-if __name__ == '__main__':
-    app.run(debug=True)
