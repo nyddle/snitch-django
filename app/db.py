@@ -44,8 +44,10 @@ class SqlrMongoManager(object):
                 raise DuplicateEntry
             s = Signer(SIGNER_SAULT)
             token = s.sign(email)
-            self.db.users.insert({'token': token, 'email': email, 'password': hashlib.md5(password).hexdigest()})
-        return True
+            # todo: test
+            user = self.db.users.insert({'token': token, 'email': email, 'password': hashlib.md5(password).hexdigest()})
+            return user
+        return False
 
     def delete_user(self, user):
         # todo: test
@@ -71,34 +73,36 @@ class SqlrMongoManager(object):
             return user
         return None
 
-    def create_event(self, message, app=None, etype=None):
+    def create_event(self, token, message, app=None, etype=None):
         # todo: test
         with self.client.start_request():
-            criteria = {'timestamp': int(time.time()), 'message': message}
-            if app:
-                criteria['app'] = app
-            if etype:
-                criteria['type'] = etype
-            self.db.events.insert(criteria)
-        return True
+            if self.validate_token(token):
+                criteria = {
+                    'timestamp': int(time.time()),
+                    'message': message,
+                    'app': app if app is not None else 'app:default'
+                }
+                if etype:
+                    criteria['type'] = etype
+                self.db.events.insert(criteria)
+                return True
+            return False
 
-    def get_events(self, app=None, user=None):
+    def get_events(self, token, app=None):
         # todo: test
         with self.client.start_request():
-            if app is None and user is None:
-                return None
+            if self.validate_token(token):
+                criteria = {}
+                if app:
+                    criteria['app'] = app
+                events = self.db.events.filter(criteria)
 
-            criteria = {}
-            if app:
-                criteria['app'] = app
-            if user:
-                u = self.get_events(user)
-                if u is not None:
-                    criteria['user.$id'] = u
-            events = self.db.events.filter(criteria)
+                for event in events:
+                    event.pop('_id')
+                return events
 
-            for event in events:
-                event.pop('_id')
-            return events
-
-
+    def validate_token(self, token):
+        user = self.db.users.find_one({'token': token})
+        if not user:
+            return False
+        return user
