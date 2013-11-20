@@ -6,7 +6,7 @@ from pymongo.database import DBRef
 from bson.objectid import ObjectId
 import hashlib
 import time
-from db import SqlrMongoManager
+from db import SqlrMongoManager, DuplicateEntry
 
 api = Blueprint('api', __name__)
 
@@ -26,8 +26,15 @@ def get():
 def post():
     if request.json is None or not 'token' in request.json or not 'message' in request.json or not 'app' in request.json:
         return jsonify({'result': False, 'reason': 'wrong request'})
-    db_manager.create_event(request.json['token'], request.json['message'])
-    return jsonify({'result': False, 'reason': 'User not found'})
+    user = db_manager.validate_token(request.json['token'])
+    if not user:
+        return jsonify({'result': False, 'reason': 'Wrong token'})
+
+    
+    event = db_manager.create_event(request.json['token'], request.json['message'])
+    if event:
+        return jsonify({'result': True})
+    return jsonify({'result': False, 'reason': 'Something wrong'})
 
 
 @api.route('/reg', methods=['POST'])
@@ -37,9 +44,13 @@ def create_user():
     # todo: send a letter
     if request.json is None or not 'email' in request.json or not 'password' in request.json:
         return jsonify({'result': False, 'reason': 'wrong request'})
-
-    user = db_manager.create_user(request.json['email'], request.json['password'])
-    return jsonify({'result': True, 'token': user['token']})
+    try:
+        token = db_manager.create_user(request.json['email'], request.json['password'], hashed=True)
+    except DuplicateEntry:
+        return jsonify({'result': False, 'reason': 'User already exists'})
+    if not token:
+        return jsonify({'result': False, 'reason': 'Wrong credentials'})
+    return jsonify({'result': True, 'token': token})
 
 
 @api.route('/auth', methods=['POST'])
@@ -47,10 +58,8 @@ def auth():
     if request.json is None or not 'email' in request.json or not 'password' in request.json:
         return jsonify({'result': False, 'reason': 'wrong request'})
 
-    with client.start_request():
-
-        user = db.users.find_one({'email': request.json['email'], 'password': request.json['password']})
-        if not user:
-            return jsonify({'result': False, 'reason': 'Email not found'})
+    user = db_manager.check_user(request.json['email'], request.json['password'], hashed=True)
+    if not user:
+        return jsonify({'result': False, 'reason': 'Email not found'})
 
     return jsonify({'token': user['token'], 'result': True})

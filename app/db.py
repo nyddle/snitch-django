@@ -37,16 +37,17 @@ class SqlrMongoManager(object):
                 raise EntryNotFound
         return True
 
-    def create_user(self, email, password):
+    def create_user(self, email, password, hashed=False):
         # todo: test
         with self.client.start_request():
             if self.db.users.find({'email': email}).count() > 0:
                 raise DuplicateEntry
             s = Signer(SIGNER_SAULT)
             token = s.sign(email)
-            # todo: test
-            user = self.db.users.insert({'token': token, 'email': email, 'password': hashlib.md5(password).hexdigest()})
-            return user
+            password = hashlib.md5(password).hexdigest() if not hashed else password
+            user = self.db.users.insert({'token': token, 'email': email, 'password': password})
+            print user
+            return token
         return False
 
     def delete_user(self, user):
