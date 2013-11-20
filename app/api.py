@@ -1,37 +1,43 @@
 # -*- coding: utf-8 -*-
-from flask import Flask, jsonify, request, render_template, redirect, url_for, flash, session, Blueprint
-from itsdangerous import Signer
-from pymongo import MongoClient
-from pymongo.database import DBRef
-from bson.objectid import ObjectId
-import hashlib
-import time
+from flask import jsonify, request, Blueprint
 from db import SqlrMongoManager, DuplicateEntry
 
 api = Blueprint('api', __name__)
 
 db_manager = SqlrMongoManager()
-
+#todo: move validate token to db_manager
 
 @api.route('/get', methods=['POST'])
 def get():
     if request.json is None or not 'token' in request.json:
         return jsonify({'result': False, 'reason': 'wrong request'})
+
+    user = db_manager.validate_token(request.json['token'])
+    if not user:
+        return jsonify({'result': False, 'reason': 'Wrong token'})
+    # todo: move to db_manager
     app = 'app:default' if not 'app' in request.json else request.json['app']
-    events = db_manager.get_events(request.json['token'], app)
+    events = db_manager.get_events(app)
+    events = list(events)
     return jsonify({'result': True, 'events': events})
 
 
 @api.route('/post', methods=['POST'])
 def post():
-    if request.json is None or not 'token' in request.json or not 'message' in request.json or not 'app' in request.json:
+    if request.json is None or not 'token' in request.json or not 'message' in request.json:
         return jsonify({'result': False, 'reason': 'wrong request'})
     user = db_manager.validate_token(request.json['token'])
     if not user:
         return jsonify({'result': False, 'reason': 'Wrong token'})
 
-    
-    event = db_manager.create_event(request.json['token'], request.json['message'])
+    params = {}
+    if 'app' in request.json:
+        params['app'] = request.json['app']
+
+    if 'etype' in request.json:
+        params['etype'] = request.json['etype']
+
+    event = db_manager.create_event(request.json['token'], request.json['message'], **params)
     if event:
         return jsonify({'result': True})
     return jsonify({'result': False, 'reason': 'Something wrong'})

@@ -81,28 +81,26 @@ class SqlrMongoManager(object):
                 criteria = {
                     'timestamp': int(time.time()),
                     'message': message,
-                    'app': app if app is not None else 'app:default'
+                    'app': app if app is not None else 'app:default',
+                    'type': etype if etype is not None else 'notification'
                 }
-                if etype:
-                    criteria['type'] = etype
                 self.db.events.insert(criteria)
                 return True
             return False
 
-    def get_events(self, token, app=None):
+    def get_events(self, app=None):
         # todo: test
         with self.client.start_request():
-            if self.validate_token(token):
-                criteria = {}
-                if app:
-                    criteria['app'] = app
-                events = self.db.events.filter(criteria)
-                if events:
-                    for event in events:
-                        event.pop('_id')
-                else:
-                    events = []
-                return events
+            criteria = {}
+            if app:
+                criteria['app'] = app
+            events = self.db.events.find(criteria)
+            result = []
+            if events:
+                for event in events:
+                    event.pop('_id')
+                    result.append(event)
+            return result
 
     def validate_token(self, token):
         user = self.db.users.find_one({'token': token})
