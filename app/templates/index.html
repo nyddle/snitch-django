@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block content %}
+    <table>
+        <tr>
+            <th>Event type</th>
+            <th>Message</th>
+        </tr>
+    {% if events %}
+        {% for event in events %}
+            <tr>
+                <td>{{ event.type }}</td>
+                <td>{{ event.message }}</td>
+            </tr>
+        {% endfor %}
+    {% endif %}
+    </table>
+{% endblock %}

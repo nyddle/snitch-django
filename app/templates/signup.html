@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <form action="{{ url_for('web.signup') }}" method="post">
+    {{ form.csrf_token }}
+        Email: {{ form.email }}
+        Password: {{ form.password }}
+        Repeat: {{ form.new_password }}
+        {{ form.errors }}
+        {% if form.email.errors %}
+            {% for error in form.email.errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+        {% endif %}
+
+        {% if form.password.errors %}
+            {% for error in form.password.errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+        {% endif %}
+
+        {% if form.new_password.errors %}
+            {% for error in form.new_password.errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+        {% endif %}
+
+        <input type="submit" value="Ok">
+    </form>
+{% endblock %}

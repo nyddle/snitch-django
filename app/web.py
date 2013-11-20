@@ -12,12 +12,13 @@ web = Blueprint('web', __name__)
 db_manager = SqlrMongoManager()
 
 
-@web.route('/login')
+@web.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        user = db_manager.check_user(form.email.data, form.password.data, hashed=False)
+        user = db_manager.check_user(form.data['email'], form.data['password'], hashed=False)
         if user:
+            user.pop('_id')
             session['user'] = user
             return redirect(url_for('web.index'))
         else:
@@ -25,31 +26,31 @@ def login():
     return render_template('login.html', form=form)
 
 
-@web.route('/logout')
+@web.route('/logout', methods=['GET', 'POST'])
 def logout():
     session.clear()
-    return redirect(url_for('login'))
+    return redirect(url_for('web.login'))
 
 
-@web.route('/signup')
+@web.route('/signup', methods=['GET', 'POST'])
 def signup():
     form = SignUpForm()
     if form.validate_on_submit():
         try:
-            db_manager.create_event(form.data.email, form.data.password)
+            print form.data
+            user = db_manager.create_user(form.data['email'], form.data['password'])
         except DuplicateEntry:
             flash('User already exists')
-        return redirect(url_for('login'))
+        except Exception, e:
+            print e
+        return redirect(url_for('web.login'))
     return render_template('signup.html', form=form)
 
 
-def create_event(self):
-    pass
-
-
-@web.route('/index')
+@web.route('/', methods=['GET', 'POST'])
+@web.route('/index', methods=['GET', 'POST'])
 def index():
     if 'user' in session:
         events_list = db_manager.get_events(session['user']['email'])
         return render_template('index.html', events=events_list)
-    return redirect(url_for('login'))
+    return redirect(url_for('web.login'))

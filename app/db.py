@@ -62,7 +62,7 @@ class SqlrMongoManager(object):
 
     def check_user(self, email, password, hashed=True):
         password = password if hashed else hashlib.md5(password).hexdigest()
-        user = self.db.users.find_one({'email': email, 'password': hashlib.md5(password).hexdigest()})
+        user = self.db.users.find_one({'email': email, 'password': password})
         if user:
             return user
         return None
@@ -96,9 +96,11 @@ class SqlrMongoManager(object):
                 if app:
                     criteria['app'] = app
                 events = self.db.events.filter(criteria)
-
-                for event in events:
-                    event.pop('_id')
+                if events:
+                    for event in events:
+                        event.pop('_id')
+                else:
+                    events = []
                 return events
 
     def validate_token(self, token):
