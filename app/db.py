@@ -69,36 +69,62 @@ class SqlrMongoManager(object):
         return None
 
     def get_user(self, email):
-        user = self.db.users.find_one({'email': email})
-        if user:
-            return user
+        """
+        email can be list or str.
+        if list will be returned list (can be empty).
+        If str - return None if not found or dict
+        """
+        if isinstance(email, list):
+            users = self.db.users.find({'email': {'$in': email}}, {'_id': 0})
+            return users
+        else:
+            user = self.db.users.find_one({'email': email})
+            if user:
+                return user
         return None
 
-    def create_event(self, token, message, app=None, etype=None):
-        # todo: test
+    def create_event(self, token, message, usernames=None, app=None, etype=None):
         with self.client.start_request():
             if self.validate_token(token):
+                tokens = [user['token'] for user in self.get_user(usernames)]
+                if tokens is None:
+                    tokens = [token]
+                elif isinstance(tokens, list):
+                    if not token in tokens:
+                        tokens.append(token)
+                else:
+                    tokens = [token]
                 criteria = {
                     'timestamp': int(time.time()),
                     'message': message,
                     'app': app if app is not None else 'app:default',
-                    'type': etype if etype is not None else 'notification'
+                    'type': etype if etype is not None else 'notification',
+                    'users': tokens
                 }
                 self.db.events.insert(criteria)
                 return True
             return False
 
-    def get_events(self, app=None):
-        # todo: test
+    def get_events(self, token, app=(), date_interval=(), etype=None):
         with self.client.start_request():
-            criteria = {}
-            if app:
-                criteria['app'] = app
-            events = self.db.events.find(criteria)
+            #criteria = {}
+            criteria = {'users': {'$in': [token]}}
+
+            if len(app) > 0:
+                criteria['app'] = {'$in': app}
+            if len(date_interval) == 2:
+                # date_interval = [from, to]
+                criteria['timestamp'] = {'$gte': date_interval[0]}
+                if date_interval[1] > 0:
+                    # if  0 - don't set lte
+                    criteria['timestamp'] = {'$lte': date_interval[1]}
+            if etype is not None:
+                criteria['type'] = etype
+
+            events = self.db.events.find(criteria, {'_id': 0})
             result = []
             if events:
                 for event in events:
-                    event.pop('_id')
                     result.append(event)
             return result
 

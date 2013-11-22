@@ -9,21 +9,41 @@ db_manager = SqlrMongoManager()
 
 @api.route('/get', methods=['POST'])
 def get():
+    """
+    JSON params:
+    token - required
+    app - None, str or list
+    date_interval - None or list with to elems. 0 is min, 1 is max. If you don't need max - set it to 0
+    type - None or string
+    """
     if request.json is None or not 'token' in request.json:
         return jsonify({'result': False, 'reason': 'wrong request'})
 
     user = db_manager.validate_token(request.json['token'])
     if not user:
         return jsonify({'result': False, 'reason': 'Wrong token'})
-    # todo: move to db_manager
-    app = 'app:default' if not 'app' in request.json else request.json['app']
-    events = db_manager.get_events(app)
+
+    params = {'app': ['app:default'] if not 'app' in request.json else request.json['app']
+              if isinstance(request.json['app']. list) else [request.json['app']],
+
+              'date_interval': tuple(request.json['date_interval']) if 'date_interval' in request.json \
+              and isinstance(request.json['data_interval'], list) else (),
+
+              'etype': request.json['type'] if 'type' in request.json else None
+              }
+
+    events = db_manager.get_events(request.json['token'], **params)
     events = list(events)
     return jsonify({'result': True, 'events': events})
 
 
 @api.route('/post', methods=['POST'])
 def post():
+    """
+    Required: toke, message
+    Optional args: app, type, emails
+    """
+    # todo: move default project/event to settings
     if request.json is None or not 'token' in request.json or not 'message' in request.json:
         return jsonify({'result': False, 'reason': 'wrong request'})
     user = db_manager.validate_token(request.json['token'])
@@ -34,8 +54,12 @@ def post():
     if 'app' in request.json:
         params['app'] = request.json['app']
 
-    if 'etype' in request.json:
-        params['etype'] = request.json['etype']
+    if 'type' in request.json:
+        params['etype'] = request.json['type']
+
+    if 'emails' in request.json:
+        params['usernames'] = request.json['emails'] if isinstance(request.json['emails'], list) \
+            else [request.json['emails']]
 
     event = db_manager.create_event(request.json['token'], request.json['message'], **params)
     if event:
