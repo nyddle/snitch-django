@@ -1,17 +1,90 @@
 {% extends 'base.html' %}
 {% block content %}
+    <div class="filters" data-bind="foreach: availableFilters">
+        <label>
+            <input type="radio" name="filter" data-bind="checked: $root.filter, attr: {'value': $data}">
+            <span data-bind="text: $data"></span>
+        </label>
+    </div>
+    <div class="controls">
+        <button data-bind="click: removeEvents">Delete selected</button>
+        Warning: delete feature doesn't implementing on server side. It will be created later.
+    </div>
     <table>
+        <thead>
         <tr>
             <th>Event type</th>
             <th>Message</th>
         </tr>
-    {% if events %}
-        {% for event in events %}
-            <tr>
-                <td>{{ event.type }}</td>
-                <td>{{ event.message }}</td>
-            </tr>
-        {% endfor %}
-    {% endif %}
+        </thead>
+        <tbody data-bind="foreach: showEvents">
+        <tr>
+            <td>
+                <input type="checkbox" data-bind="click: $root.checkEvent">
+            </td>
+            <td data-bind="text: type"></td>
+            <td data-bind="text: message"></td>
+        </tr>
+        </tbody>
     </table>
+    P.S. Pagination will be created it next version
+    <script>
+        function SnitchEvent(id, message, type) {
+            var self = this;
+            self.id = id;
+            self.message = message;
+            self.type = type;
+        }
+
+        function SnitchEventsViewsModel() {
+            var self = this;
+            var initial_data = [];
+
+            self.filter = ko.observable("all");
+            self.events = ko.observableArray(initial_data);
+
+            self.availableFilters = ko.computed(function () {
+                var filters = ["all"];
+                self.events().forEach(function (event) {
+                    if (filters.indexOf(event.type) == -1) {
+                        filters.push(event.type);
+                    }
+                });
+                return filters;
+            });
+
+            self.showEvents = ko.computed(function () {
+                var type = self.filter();
+                if (type === 'all') {
+                    return self.events();
+                }
+                return ko.utils.arrayFilter(self.events(), function (event) {
+                    return event.type === type;
+                });
+            }, self);
+
+            self.checkedEvents = ko.observableArray([]);
+            self.checkEvent = function (event) {
+
+                self.checkedEvents.push(event);
+                return true;
+            };
+
+            self.removeEvents = function () {
+                self.checkedEvents().forEach(function (event) {
+                    self.events.remove(event);
+                });
+                self.checkedEvents([]);
+            };
+        }
+        var model = new SnitchEventsViewsModel();
+        ko.applyBindings(model);
+
+        $(function(){
+            $.post('/web/index',function (response) {
+                model.events(response.events);
+            }).error(function () {});
+        });
+    </script>
+
 {% endblock %}

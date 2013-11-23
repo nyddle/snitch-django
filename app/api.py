@@ -31,7 +31,7 @@ def get():
 
               'etype': request.json['type'] if 'type' in request.json else None
               }
-
+    # todo: return id
     events = db_manager.get_events(request.json['token'], **params)
     events = list(events)
     return jsonify({'result': True, 'events': events})

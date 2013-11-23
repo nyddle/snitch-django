@@ -1,13 +1,9 @@
 # -*- coding: utf-8 -*-
-from flask import Flask, jsonify, request, render_template, redirect, url_for, flash, session, Blueprint
+from flask import render_template, redirect, url_for, flash, session, Blueprint, request, jsonify
 from forms import *
-import hashlib
-from itsdangerous import Signer
-from pymongo import MongoClient
-from db import SqlrMongoManager, DuplicateEntry, EntryNotFound
 
-#client = MongoClient('localhost', 27017)
-#db = client.sqlr
+from db import SqlrMongoManager, DuplicateEntry
+
 web = Blueprint('web', __name__)
 db_manager = SqlrMongoManager()
 
@@ -51,6 +47,8 @@ def signup():
 @web.route('/index', methods=['GET', 'POST'])
 def index():
     if 'user' in session:
-        events_list = db_manager.get_events(session['user']['email'])
+        events_list = db_manager.get_events(session['user']['token'])
+        if request.method == 'POST':
+            return jsonify({'events': events_list})
         return render_template('index.html', events=events_list)
     return redirect(url_for('web.login'))
