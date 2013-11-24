@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Squearel</title>
+    <title>Snitch</title>
     <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/knockout.min.js') }}"></script>
 </head>
@@ -15,7 +15,15 @@
         </ul>
     {% endif %}
 {% endwith %}
-
+<div>
+    <ul>
+        {% if session.user %}
+            <li>
+                <a href="{{ url_for('web.logout') }}">Logout</a>
+            </li>
+        {% endif %}
+    </ul>
+</div>
 {% block content %}
 {% endblock %}
 </body>

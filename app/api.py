@@ -60,6 +60,10 @@ def post():
     if 'emails' in request.json:
         params['usernames'] = request.json['emails'] if isinstance(request.json['emails'], list) \
             else [request.json['emails']]
+        if not user['email'] in params['usernames']:
+            params['usernames'].append(user['email'])
+    else:
+        params['usernames'] = [user['email']]
 
     event = db_manager.create_event(request.json['token'], request.json['message'], **params)
     if event:

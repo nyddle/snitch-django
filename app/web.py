@@ -8,6 +8,14 @@ web = Blueprint('web', __name__)
 db_manager = SqlrMongoManager()
 
 
+def login_required(fn):
+    def wrapper(*args, **kwargs):
+        if not 'user' in session:
+            return redirect(url_for('web.login'))
+        return fn(*args, **kwargs)
+    return wrapper
+
+
 @web.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -43,6 +51,7 @@ def signup():
     return render_template('signup.html', form=form)
 
 
+@login_required
 @web.route('/', methods=['GET', 'POST'])
 @web.route('/index', methods=['GET', 'POST'])
 def index():
