@@ -18,6 +18,8 @@ def login_required(fn):
 
 @web.route('/login', methods=['GET', 'POST'])
 def login():
+    if 'user' in session:
+        return redirect(url_for('web.index'))
     form = LoginForm()
     if form.validate_on_submit():
         user = db_manager.check_user(form.data['email'], form.data['password'], hashed=False)
@@ -30,6 +32,7 @@ def login():
     return render_template('login.html', form=form)
 
 
+@login_required
 @web.route('/logout', methods=['GET', 'POST'])
 def logout():
     session.clear()
@@ -38,6 +41,8 @@ def logout():
 
 @web.route('/signup', methods=['GET', 'POST'])
 def signup():
+    if 'user' in session:
+        return redirect(url_for('web.index'))
     form = SignUpForm()
     if form.validate_on_submit():
         try:
@@ -55,9 +60,20 @@ def signup():
 @web.route('/', methods=['GET', 'POST'])
 @web.route('/index', methods=['GET', 'POST'])
 def index():
-    if 'user' in session:
-        events_list = db_manager.get_events(session['user']['token'])
-        if request.method == 'POST':
-            return jsonify({'events': events_list})
-        return render_template('index.html', events=events_list)
-    return redirect(url_for('web.login'))
+
+    if request.method == 'POST':
+        #request.args
+        filters = {}
+        if 'app' in request.args:
+            pass
+        if 'from' in request.args:
+            pass
+        if 'to' in request.args:
+            pass
+        if 'type' in request.args:
+            filters['etype'] = request.args['type']
+        events_list = db_manager.get_events(session['user']['token'], **filters)
+
+        return jsonify({'events': events_list})
+    events_list = db_manager.get_events(session['user']['token'])
+    return render_template('index.html', events=events_list)

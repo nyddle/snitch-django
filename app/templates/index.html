@@ -6,6 +6,10 @@
             <span data-bind="text: $data"></span>
         </label>
     </div>
+    Filter temorary unavailable. Filter under construction
+    <div>
+        Select date range
+    </div>
     <div class="controls">
         <button data-bind="click: removeEvents">Delete selected</button>
         Warning: delete feature doesn't implementing on server side. It will be created later.
@@ -58,8 +62,10 @@
                 if (type === 'all') {
                     return self.events();
                 }
-                return ko.utils.arrayFilter(self.events(), function (event) {
-                    return event.type === type;
+                $.post('?type='+type, function(response){
+                    self.events([]);
+                    console.log(response.events);
+                    self.events(response.events);
                 });
             }, self);
 
@@ -82,6 +88,7 @@
 
         $(function(){
             $.post('/web/index',function (response) {
+                console.log(response.events)
                 model.events(response.events);
             }).error(function () {});
         });
