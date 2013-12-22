@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 from flask import render_template, redirect, url_for, flash, session, Blueprint, request, jsonify
+from functools import wraps
+
 from forms import *
 
 from db import SqlrMongoManager, DuplicateEntry
@@ -9,6 +11,7 @@ db_manager = SqlrMongoManager()
 
 
 def login_required(fn):
+    @wraps(fn)
     def wrapper(*args, **kwargs):
         if not 'user' in session:
             return redirect(url_for('web.login'))
@@ -32,8 +35,9 @@ def login():
     return render_template('login.html', form=form)
 
 
-@login_required
+
 @web.route('/logout', methods=['GET', 'POST'])
+@login_required
 def logout():
     session.clear()
     return redirect(url_for('web.login'))
@@ -56,9 +60,9 @@ def signup():
     return render_template('signup.html', form=form)
 
 
-@login_required
 @web.route('/', methods=['GET', 'POST'])
 @web.route('/index', methods=['GET', 'POST'])
+@login_required
 def index():
 
     if request.method == 'POST':
@@ -75,5 +79,9 @@ def index():
         events_list = db_manager.get_events(session['user']['token'], **filters)
 
         return jsonify({'events': events_list})
+
+    # todo: refactor for use one mongo session
     events_list = db_manager.get_events(session['user']['token'])
+    types_list = []
+    projects_list = []
     return render_template('index.html', events=events_list)
