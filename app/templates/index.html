@@ -1,49 +1,64 @@
 {% extends 'base.html' %}
 {% block content %}
-    <form class="form-inline" role="form">
-        Filter by type:
-        <div class="form-group">
-            <div class="filters" data-bind="foreach: availableFilters">
-                <div class="checkbox">
-                    <label>
-                        <input type="radio" name="filter" data-bind="checked: $root.filter, attr: {'value': $data}">
-                        <span data-bind="text: $data"></span>
-                    </label>
-                </div>
-            </div>
-        </div>
-    </form>
 
     <div class="row">
+        <div class="col-md-8" >
+            <ul class="list-inline" data-bind="foreach: apps">
+                <li>
+                    <button data-bind="text: $data, click: $root.clickOnApp" class="btn btn-default"></button>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="row top-buffer">
         <div class="col-md-8">
             <form class="form-inline" role="form">
-
-                Filter by date:
                 <div class="form-group">
-                    <input type="text" class="form-control" placeholder="From">
-                </div>
-                <div class="form-group">
-                    <input type="text" class="form-control" placeholder="To">
+                    Type:
                 </div>
 
+                <div class="form-group">
+                    <select data-bind="options: availableTypes, value: filterType" class="form-control"></select>
+                </div>
+
+                <div class="form-group">on interval from</div>
+
+                <div class="form-group">
+                    <input type="text" class="form-control datepicker1" data-bind="value: dateFrom" placeholder="From">
+                </div>
+
+                <div class="form-group">to</div>
+
+                <div class="form-group">
+                    <input type="text" class="form-control datepicker2" data-bind="value: dateTo" placeholder="To">
+                </div>
+
+                <div class="form-group">
+                    <input type="button" class="btn btn-default" value="Apply" data-bind="click: applyFilters">
+                </div>
             </form>
         </div>
     </div>
-    <div class="row">
+
+    <div class="row top-buffer">
         <div class="col-md-8">
             <div class="controls">
                 <ul class="list-inline">
-                    <li>
-                        <a href="#" data-bind="">Check all</a>
+                    <li data-bind="visible: !showFormControls()">
+                        <a href="#" data-bind="click: checkAll">Check all</a>
                     </li>
-                    <li>
+                    <li data-bind="visible: showFormControls">
+                        <a href="#" data-bind="click: uncheckAll">Uncheck all</a>
+                    </li>
+                    <li data-bind="visible: showFormControls">
                         <a href="#" data-bind="click: removeEvents">Delete selected</a>
                     </li>
                 </ul>
             </div>
         </div>
     </div>
-    <div class="row">
+    <div class="row  top-buffer">
         <div class="col-md-8">
             <table class="table table-striped">
                 <thead>
@@ -56,7 +71,7 @@
                 <tbody data-bind="foreach: showEvents">
                 <tr>
                     <td>
-                        <input type="checkbox" data-bind="click: $root.checkEvent">
+                        <input type="checkbox" class="event-chbx" data-bind="click: $root.checkEvent">
                     </td>
                     <td data-bind="text: type"></td>
                     <td data-bind="text: message"></td>

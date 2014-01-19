@@ -35,12 +35,16 @@ def login():
     return render_template('login.html', form=form)
 
 
-
 @web.route('/logout', methods=['GET', 'POST'])
 @login_required
 def logout():
     session.clear()
     return redirect(url_for('web.login'))
+
+
+@web.route('/restore', methods=['GET', 'POST'])
+def restore_pass():
+    return render_template('restore_password.html')
 
 
 @web.route('/signup', methods=['GET', 'POST'])
@@ -50,7 +54,6 @@ def signup():
     form = SignUpForm()
     if form.validate_on_submit():
         try:
-            print form.data
             user = db_manager.create_user(form.data['email'], form.data['password'])
         except DuplicateEntry:
             flash('User already exists')
@@ -60,11 +63,16 @@ def signup():
     return render_template('signup.html', form=form)
 
 
+@web.route('/profile', methods=['GET', 'POST'])
+@login_required
+def profile():
+    return render_template('profile.html')
+
+
 @web.route('/', methods=['GET', 'POST'])
 @web.route('/index', methods=['GET', 'POST'])
 @login_required
 def index():
-
     if request.method == 'POST':
         #request.args
         filters = {}

@@ -1,9 +1,36 @@
 {% extends 'base.html' %}
+{% block js %}{% endblock %}
+{% block page_class %}login{% endblock %}
+{% block menu %}{% endblock %}
+
 {% block content %}
-<form action="{{ url_for('web.login') }}" method="post">
-    {{ form.csrf_token }}
-    {{ form.email(placeholder='Email') }}
-    {{ form.password(placeholder='Password') }}
-    <input type="submit" value="Login">
-</form>
+    <div class="main-form">
+        <form action="{{ url_for('web.login') }}" method="post" class="form-horizontal">
+            {{ form.csrf_token }}
+            <div class="form-group">
+                {{ form.email(placeholder='Email', class='form-control') }}
+                {% if form.email.errors %}
+                    {% for error in form.email.errors %}
+                        <p class="text-danger main-form-error">{{ error }}</p>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            <div class="form-group">
+                {{ form.password(placeholder='Password', class='form-control') }}
+                {% if form.password.errors %}
+                    {% for error in form.password.errors %}
+                        <p class="text-danger main-form-error">{{ error }}</p>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Login" class="btn btn-default">
+                or <a href="{{ url_for('web.signup') }}">get an account!</a>
+            </div>
+        </form>
+        <div class="middle-text-container">
+            Click <a href="{{ url_for('web.restore_pass') }}">here</a> if you forgot your password
+        </div>
+
+    </div>
 {% endblock %}

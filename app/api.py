@@ -11,7 +11,7 @@ db_manager = SqlrMongoManager()
 def get():
     """
     JSON params:
-    token - required
+    token - required, string
     app - None, str or list
     date_interval - None or list with to elems. 0 is min, 1 is max. If you don't need max - set it to 0
     type - None or string
@@ -40,7 +40,7 @@ def get():
 @api.route('/post', methods=['POST'])
 def post():
     """
-    Required: toke, message
+    Required: token, message
     Optional args: app, type, emails
     """
     # todo: move default project/event to settings
@@ -85,6 +85,7 @@ def create_user():
     if not token:
         return jsonify({'result': False, 'reason': 'Wrong credentials'})
     return jsonify({'result': True, 'token': token})
+
 
 
 @api.route('/auth', methods=['POST'])
