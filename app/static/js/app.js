@@ -8,20 +8,36 @@ function SnitchEvent(id, message, type, app, timestamp) {
     self.checked = false;
 }
 
-function SnitchEventsViewsModel() {
+function SnitchApp(name, selected) {
     var self = this;
+    self.name = name;
+    self.isSelected = ko.computed(function(){
+        return self === selected();
+    }, self);
+}
 
-    self.filterType = ko.observable("all");
-    self.dateFrom = ko.observable();
-    self.dateTo = ko.observable();
+function SnitchEventsViewsModel() {
+    var self = this,
+        app_url = '/web/index/';
 
-    self.apps = ko.observableArray(['Default App']);
-    self.currentApps = ko.observableArray(self.apps());
+    self.activeApp = ko.observable();
+    self.apps = ko.observableArray([new SnitchApp('All', self.activeApp)]);
+
+    self.filter = {'oloolo': 'ololo'};
 
     self.events = ko.observableArray([]);
     self.checkedEvents = ko.observableArray([]);
 
     self.showFormControls = ko.observable(false);
+
+    self.changeApp = function(app) {
+        self.activeApp(app);
+        $.ajax(app_url + app.name, {
+            data: JSON.stringify(self.filter),
+            contentType: "application/json",
+            type: 'POST'
+        });
+    };
 
     self.checkedEvents.subscribe(function () {
         if (self.checkedEvents().length > 0) {
@@ -31,40 +47,9 @@ function SnitchEventsViewsModel() {
         }
     });
 
-    self.availableTypes = ko.computed(function () {
-        var filters = ["all"];
-        self.events().forEach(function (event) {
-            if (filters.indexOf(event.type) == -1) {
-                filters.push(event.type);
-            }
-        });
-        return filters;
-    });
-
     self.showEvents = ko.computed(function () {
-        var type = self.filterType();
-        if (type === 'all') {
-            return self.events();
-        }
-        $.post('?type=' + type, function (response) {
-            self.events([]);
-            self.events(response.events);
-        });
+        return self.events();
     }, self);
-
-    self.clickOnApp = function (data, event) {
-
-        var index = self.currentApps.indexOf(data),
-            elem = $(event.target);
-        if (index > -1) {
-            self.currentApps.remove(data);
-        } else {
-            self.currentApps.push(data);
-        }
-        elem.toggleClass('btn-primary').toggleClass('btn-default');
-        self.currentApps.valueHasMutated();
-        return false;
-    }
 
     self.checkEvent = function (event) {
         var index = self.checkedEvents.indexOf(event);
@@ -96,31 +81,21 @@ function SnitchEventsViewsModel() {
         // todo: api call
         self.checkedEvents([]);
     };
-
-    self.applyFilters = function () {
-        var data = [
-            self.dateFrom() ? 'from='+self.dateFrom() : '',
-            self.dateTo() ? 'to='+self.dateTo() : '',
-            self.apps() ? 'apps='+self.apps() : '',
-            self.filterType() ? 'type='+self.filterType() : ''
-        ]
-
-        alert('Applied!');
-        return true;
-    }
 }
 
 $(function () {
     var model = new SnitchEventsViewsModel();
-
-    $('.datepicker1').datepicker();
-    $('.datepicker2').datepicker();
     $.post('/web/index',function (response) {
         for (var i = 0; i < response.events.length; i++) {
             var event = response.events[i];
             model.events.push(new SnitchEvent(1, event.message, event.type, event.app, event.timestamp));
         }
-        // todo: add response.apps
+        for (var j = 0; j < response.apps.length; j++) {
+            console.log(response.apps[j])
+            model.apps.push(new SnitchApp(response.apps[j], model.activeApp));
+        }
+        model.activeApp(model.apps()[0]);
+        model.apps.valueHasMutated();
         ko.applyBindings(model);
     }).error(function () {
             // todo: add handler

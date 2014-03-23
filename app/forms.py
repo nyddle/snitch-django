@@ -14,5 +14,3 @@ class SignUpForm(Form):
 class LoginForm(Form):
     email = TextField('email', validators=[Required(), Email()])
     password = PasswordField('password', validators=[Required()], default=False)
-
-

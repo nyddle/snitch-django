@@ -5,9 +5,9 @@ SIGN IN
 curl -X POST -H "Content-Type: application/json" -d '{"email":"rusanov.andrey.mail@gmail.com","password":"b59c67bf196a4758191e42f76670ceba"}' http://127.0.0.1:5000/api/auth
 
 POST:
-curl -X POST -H "Content-Type: application/json" -d '{"token": "rusanov.andrey.mail@gmail.com.tH4Sxua0nA1tzgpNFNsvSu47wJs", "message": "test"}' http://127.0.0.1:5000/api/post
-curl -X POST -H "Content-Type: application/json" -d '{"token": "rusanov.andrey.mail@gmail.com.tH4Sxua0nA1tzgpNFNsvSu47wJs", "message": "test", "app": "new1", "etype": "event"}' http://127.0.0.1:5000/api/post
+curl -X POST -H "Content-Type: application/json" -d '{"token": "rusanov.andrey.mail@gmail.com.tH4Sxua0nA1tzgpNFNsvSu47wJs", "message": "test"}' http://127.0.0.1:5000/api/add
+curl -X POST -H "Content-Type: application/json" -d '{"token": "rusanov.andrey.mail@gmail.com.tH4Sxua0nA1tzgpNFNsvSu47wJs", "message": "test", "app": "new1", "etype": "event"}' http://127.0.0.1:5000/api/add
 
 GET:
-curl -X POST -H "Content-Type: application/json" -d '{"token": "rusanov.andrey.mail@gmail.com.tH4Sxua0nA1tzgpNFNsvSu47wJs", "app":"new1"}' http://127.0.0.1:5000/api/get
+curl -X POST -H "Content-Type: application/json" -d '{"token": "rusanov.andrey.mail@gmail.com.tH4Sxua0nA1tzgpNFNsvSu47wJs", "app":"new1"}' http://127.0.0.1:5000/api/list
 
