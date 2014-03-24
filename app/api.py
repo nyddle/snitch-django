@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from functools import wraps
+
 from flask import jsonify, request, Blueprint, current_app
 
 from db import SqlrMongoManager, DuplicateEntry
@@ -6,10 +8,20 @@ from db import SqlrMongoManager, DuplicateEntry
 api = Blueprint('api', __name__)
 
 
+def token_required(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if request.json is None or not 'token' in request.json:
+            return jsonify({'result': False, 'reason': 'wrong request'})
+        return f(*args, **kwargs)
+    return wrapper
+
+
 # todo: move token validation to db_manager
 # todo: https
 # todo: pyotp
 @api.route('/list', methods=['POST'])
+@token_required
 def get():
     """
     JSON params:
@@ -26,9 +38,6 @@ def get():
     reason: string(returned if result is False;
     events: list; returned if result is True;
     """
-    if request.json is None or not 'token' in request.json:
-        return jsonify({'result': False, 'reason': 'wrong request'})
-
     db_manager = SqlrMongoManager(host=current_app.config['MONGO_HOST'],
                                   port=current_app.config['MONGO_PORT'],
                                   db=current_app.config['DB'])
@@ -53,6 +62,7 @@ def get():
 
 
 @api.route('/add', methods=['POST'])
+@token_required
 def post():
     """
     Required: token, message

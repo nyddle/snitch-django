@@ -4,7 +4,7 @@ import requests
 import json
 
 from db import SqlrMongoManager
-from settings import TESTS_CONFIGS
+from test_settings import *
 
 DB = 'test_db'
 
@@ -15,7 +15,7 @@ class TestSnitchAPI(unittest.TestCase):
         self.drop_database(DB)
         self.mm = SqlrMongoManager(db=DB)
         self.db = self.mm.db
-        self.base_url = TESTS_CONFIGS['url']
+        self.base_url = URL
         self.token = None
         # todo: load fixture with test data
 
@@ -33,7 +33,6 @@ class TestSnitchAPI(unittest.TestCase):
         else:
             dumped_data = None
             headers = {}
-
         r = requests.post('{}/{}'.format(self.base_url, url),
                           headers=headers,
                           data=dumped_data)
@@ -41,12 +40,13 @@ class TestSnitchAPI(unittest.TestCase):
 
     def test_user_creation(self):
         # todo: mode urls to settings
-        send_data = {'email': TESTS_CONFIGS['email'],
-                     'password': TESTS_CONFIGS['password']}
+        send_data = {'email': EMAIL,
+                     'password': PASSWORD}
 
         r = self.send_post_request('api/reg', send_data)
         self.assertEqual(r.status_code, 200)
         data = r.json()
+        print data
         self.assertIn('result', data)
         self.assertTrue(data['result'])
         self.assertIn('token', data)

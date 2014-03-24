@@ -22,8 +22,6 @@ class SqlrMongoManager(object):
     def __init__(self, host=MONGO_HOST, port=MONGO_PORT, db='sqlr', app=None):
         self.client = MongoClient(host, port)
         self.db = self.client[db]
-        # self.db = self.client[db if app is None or not app.config['TESTING']
-        #                       else TESTS_CONFIGS['db']]
 
     def __new__(cls, *args, **kwargs):
         if not cls._instance:
@@ -42,21 +40,20 @@ class SqlrMongoManager(object):
         return True
 
     def create_user(self, email, password, hashed=False):
-        # todo: test
         with self.client.start_request():
             if self.db.users.find({'email': email}).count() > 0:
                 raise DuplicateEntry
             s = Signer(SIGNER_SAULT)
+            print email
             token = s.sign(email)
             password = hashlib.md5(password).hexdigest() if not hashed \
                 else password
-            user = self.db.users.insert({'token': token, 'email': email,
-                                         'password': password})
+            self.db.users.insert({'token': token, 'email': email,
+                                 'password': password})
             return token
         return False
 
     def delete_user(self, user):
-        # todo: test
         with self.client.start_request():
             user = self.db.users.find_one({'email': user})
             if user:
