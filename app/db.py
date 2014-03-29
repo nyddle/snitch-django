@@ -41,10 +41,11 @@ class SqlrMongoManager(object):
 
     def create_user(self, email, password, hashed=False):
         with self.client.start_request():
+            print email
             if self.db.users.find({'email': email}).count() > 0:
+                print 'Empty('
                 raise DuplicateEntry
             s = Signer(SIGNER_SAULT)
-            print email
             token = s.sign(email)
             password = hashlib.md5(password).hexdigest() if not hashed \
                 else password

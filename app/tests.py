@@ -27,26 +27,26 @@ class TestSnitchAPI(unittest.TestCase):
         mm.client.drop_database(DB)
 
     def send_post_request(self, url, data):
-        if data is not None and len(data) > 0:
-            headers = {'content-type': 'application/json'}
-            dumped_data = json.dumps(data)
-        else:
-            dumped_data = None
-            headers = {}
+        headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+        data = data if data is not None else {}
+        # if data is not None and len(data) > 0:
+        #     headers = {'Content-Type': 'application/json',
+        #                'Content-Length': len(data)}
+        #
+        #     dumped_data = json.dumps(data)
+        # else:
+        #     dumped_data = {}
+        print data
         r = requests.post('{}/{}'.format(self.base_url, url),
-                          headers=headers,
-                          data=dumped_data)
+                          headers=headers, data=json.dumps(data))
         return r
 
     def test_user_creation(self):
         # todo: mode urls to settings
-        send_data = {'email': EMAIL,
-                     'password': PASSWORD}
-
+        send_data = {'email': EMAIL, 'password': PASSWORD}
         r = self.send_post_request('api/reg', send_data)
         self.assertEqual(r.status_code, 200)
         data = r.json()
-        print data
         self.assertIn('result', data)
         self.assertTrue(data['result'])
         self.assertIn('token', data)
@@ -72,3 +72,7 @@ class TestSnitchAPI(unittest.TestCase):
     #
     # def test_event_select_by_user(self):
     #     pass
+
+
+if __name__ == '__main__':
+    unittest.main()
