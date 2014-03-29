@@ -20,7 +20,8 @@ class TestSnitchAPI(unittest.TestCase):
         # todo: load fixture with test data
 
     def tearDown(self):
-        self.mm.client.drop_database(DB)
+        # self.mm.client.drop_database(DB)
+        pass
 
     def drop_database(self, db_name):
         mm = SqlrMongoManager(db=db_name)
@@ -45,14 +46,21 @@ class TestSnitchAPI(unittest.TestCase):
         self.token = data['token'] if 'token' in data else None
 
     def test_auth(self):
-        send_data = {'token': }
+        r = self.send_post_request('api/auth', {'email': EMAIL,
+                                                'password': PASSWORD})
+        self.assertEqual(r.status_code, 200)
+        data = r.json()
+        self.assertIn('result', data)
+        self.assertTrue(data['result'])
+        self.assertIn('token', data)
+        self.token = data['token'] if 'token' in data else None
 
-    # def test_event_creation(self):
-    #     sent_data = {'message': 'test_message'}
-    #     r = self.send_post_request('api/add', sent_data)
-    #     self.assertEqual(r.status_code, 200)
-    #     data = r.json()
-    #     self.assertTrue(data['result'])
+    def test_event_creation(self):
+        sent_data = {'message': 'test_message', 'token': self.token}
+        r = self.send_post_request('api/add', sent_data)
+        self.assertEqual(r.status_code, 200)
+        data = r.json()
+        self.assertTrue(data['result'])
 
     # def test_event_select_by_app(self):
     #     pass

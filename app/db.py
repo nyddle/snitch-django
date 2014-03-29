@@ -41,9 +41,8 @@ class SqlrMongoManager(object):
 
     def create_user(self, email, password, hashed=False):
         with self.client.start_request():
-            print email
+
             if self.db.users.find({'email': email}).count() > 0:
-                print 'Empty('
                 raise DuplicateEntry
             s = Signer(SIGNER_SAULT)
             token = s.sign(email)
@@ -131,8 +130,8 @@ class SqlrMongoManager(object):
             criteria = {'users': {'$in': [token]}}
 
             if len(app) > 0:
-                #criteria['app'] = {'$in': [app]}
-                criteria['app'] = app
+                criteria['app'] = {'$in': app}
+                # criteria['app'] = app
             if len(date_interval) == 2:
                 # date_interval = [from, to]
                 criteria['timestamp'] = {'$gte': date_interval[0]}
@@ -143,6 +142,7 @@ class SqlrMongoManager(object):
                 criteria['type'] = etype
 
             events = self.db.events.find(criteria, {'_id': 0})
+
             result = []
             if events.count() > 0:
                 for event in events:
