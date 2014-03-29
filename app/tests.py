@@ -29,14 +29,6 @@ class TestSnitchAPI(unittest.TestCase):
     def send_post_request(self, url, data):
         headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
         data = data if data is not None else {}
-        # if data is not None and len(data) > 0:
-        #     headers = {'Content-Type': 'application/json',
-        #                'Content-Length': len(data)}
-        #
-        #     dumped_data = json.dumps(data)
-        # else:
-        #     dumped_data = {}
-        print data
         r = requests.post('{}/{}'.format(self.base_url, url),
                           headers=headers, data=json.dumps(data))
         return r
@@ -50,13 +42,11 @@ class TestSnitchAPI(unittest.TestCase):
         self.assertIn('result', data)
         self.assertTrue(data['result'])
         self.assertIn('token', data)
+        self.token = data['token'] if 'token' in data else None
 
-    # def test_valid_token(self):
-    #     pass
-    #
-    # def test_invalid_token(self):
-    #     pass
-    #
+    def test_auth(self):
+        send_data = {'token': }
+
     # def test_event_creation(self):
     #     sent_data = {'message': 'test_message'}
     #     r = self.send_post_request('api/add', sent_data)
