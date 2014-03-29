@@ -1,3 +1,8 @@
+snitch
+======
+
+landing page for our monitoring service
+=======
 # Snitch API
 
 ## Defaults
