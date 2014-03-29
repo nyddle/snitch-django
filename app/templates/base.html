@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Snitch</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet/less" href="{{ url_for('static', filename='css/datepicker.css') }}">
+    <link rel="stylesheet/less" href="{{ url_for('static', filename='css/style.less') }}">
+    <script src="{{ url_for('static', filename='js/less.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap-datepicker.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/knockout.min.js') }}"></script>
+    {% block js %}
+        <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    {% endblock %}
+</head>
+<body>
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <ul class=flashes>
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+{% endwith %}
+
+{% block menu %}
+{% include 'menu.base.html' %}
+{% endblock %}
+
+<div class="container {% block page_class %}regular{% endblock %}-page">
+    {% block content %}
+    {% endblock %}
+</div>
+</body>
+</html>

@@ -1,0 +1,29 @@
+v0.1
+
+/get
+Get data (with flag unread).
+Request: {token: TOKEN, app: APP[, type: STRING] }
+Response: {result: BOOLEAN, token: TOKEN, app: APP, events: [{ name: STRING, description: STRING, type: STRING }]}
+
+/post
+Post data
+Request: {token: TOKEN, app: APP, event: { name: STRING, description: STRING, type: STRING }}
+Response: {result: BOOLEAN}
+
+/reg
+Create user
+
+/prj
+Create project
+Request: {token: TOKEN, app: {title: STRING}}
+Response: {result: BOOLEAN}
+
+types: {
+	notification: 1, 
+	error: 2
+}
+
+
+Collections:
+users
+events

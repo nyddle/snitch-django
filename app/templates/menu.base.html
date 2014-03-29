@@ -1,0 +1,19 @@
+<div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="{{ url_for('web.index') }}">Snitch</a>
+        </div>
+        <div class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li {% if request.path == url_for('web.index') %}class="active"{% endif %}>
+                    <a href="{{ url_for('web.index') }}">Home</a>
+                </li>
+                <li {% if request.path == url_for('web.profile') %}class="active"{% endif %}>
+                    <a href="{{ url_for('web.profile') }}">Profile</a>
+                </li>
+                <li><a href="{{ url_for('web.logout') }}">Logout</a></li>
+            </ul>
+        </div>
+        <!--/.nav-collapse -->
+    </div>
+    </div>

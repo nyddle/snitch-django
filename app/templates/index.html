@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block content %}
+
+    <div class="row">
+        <div class="col-md-8" >
+            <ul class="nav nav-tabs" data-bind="foreach: apps">
+                <li data-bind="css: { active: isSelected }">
+                    <a href="#" data-bind="text: name, click: $parent.changeApp"></a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="row top-buffer">
+        <div class="col-md-8">
+            <div class="controls">
+                <ul class="list-inline">
+                    <li data-bind="visible: !showFormControls()">
+                        <a href="#" data-bind="click: checkAll">Check all</a>
+                    </li>
+                    <li data-bind="visible: showFormControls">
+                        <a href="#" data-bind="click: uncheckAll">Uncheck all</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="row top-buffer">
+        <div class="col-md-8">
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Event type</th>
+                    <th>Message</th>
+                </tr>
+                </thead>
+                <tbody data-bind="foreach: showEvents">
+                <tr>
+                    <td>
+                        <input type="checkbox" class="event-chbx" data-bind="click: $root.checkEvent">
+                    </td>
+                    <td data-bind="text: type"></td>
+                    <td data-bind="text: message"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
